@@ -238,6 +238,7 @@ class SSHClient(ClosingContextManager):
         passphrase=None,
         disabled_algorithms=None,
         transport_factory=None,
+        controlpath=None,
     ):
         """
         Connect to an SSH server and authenticate to it.  The server's host key
@@ -321,6 +322,8 @@ class SSHClient(ClosingContextManager):
             functionality, and algorithm selection) and generates a
             `.Transport` instance to be used by this client. Defaults to
             `.Transport.__init__`.
+        :param string controlpath: path to unix domain socket of running
+            ControlMaster multiplexing agent.
 
         :raises:
             `.BadHostKeyException` -- if the server's host key could not be
@@ -343,6 +346,19 @@ class SSHClient(ClosingContextManager):
         .. versionchanged:: 2.12
             Added the ``transport_factory`` argument.
         """
+        if controlpath:
+            try:
+                t = self._transport = Transport(
+                    (hostname, port), controlpath=controlpath)
+                # If this connection succeeds, most (but not all) of the
+                # SSHClient connect steps can be bypassed
+                if self._log_channel is not None:
+                    t.set_log_channel(self._log_channel)
+                t.start_client(timeout=timeout)
+                return
+            except SSHException as e:
+                # Quietly fallback to traditional connection steps
+                pass
         if not sock:
             errors = {}
             # Try multiple possible address families (e.g. IPv4 vs IPv6)
