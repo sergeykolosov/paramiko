@@ -182,7 +182,7 @@ class SSHConfig(object):
         # Store last 'open' block and we're done
         self._config.append(context)
 
-    def lookup(self, hostname):
+    def lookup(self, hostname, effective_options=None):
         """
         Return a dict (`SSHConfigDict`) of config options for a given hostname.
 
@@ -214,15 +214,24 @@ class SSHConfig(object):
 
         :param str hostname: the hostname to lookup
 
+        :param SSHConfigDict effective_options:
+            Effective values of options that must be considered during variable
+            expansion. For any values that are not provided here, tokenization
+            will fall back to the values in the config file or other defaults,
+            which is likely to produce invalid results (e. g. values for %p, %r,
+            %C will be invalid).
+
         .. versionchanged:: 2.5
             Returns `SSHConfigDict` objects instead of dict literals.
         .. versionchanged:: 2.7
             Added canonicalization support.
         .. versionchanged:: 2.7
             Added ``Match`` support.
+        .. versionadded:: 2.12.post1
+            Added ``effective_options``.
         """
         # First pass
-        options = self._lookup(hostname=hostname)
+        options = self._lookup(hostname=hostname, options=effective_options)
         # Inject HostName if it was not set (this used to be done incidentally
         # during tokenization, for some reason).
         if "hostname" not in options:
