@@ -346,9 +346,12 @@ class SSHClient(ClosingContextManager):
         .. versionchanged:: 2.12
             Added the ``transport_factory`` argument.
         """
+        if transport_factory is None:
+            transport_factory = Transport
+
         if controlpath:
             try:
-                t = self._transport = Transport(
+                t = self._transport = transport_factory(
                     (hostname, port), controlpath=controlpath
                 )
                 # If this connection succeeds, most (but not all) of the
@@ -397,8 +400,6 @@ class SSHClient(ClosingContextManager):
             if len(errors) == len(to_try):
                 raise NoValidConnectionsError(errors)
 
-        if transport_factory is None:
-            transport_factory = Transport
         t = self._transport = transport_factory(
             sock,
             gss_kex=gss_kex,
