@@ -448,6 +448,7 @@ class Transport(threading.Thread, ClosingContextManager):
                 self.controlpath = controlpath
                 sock = mux_sock
             except Exception as e:
+                mux_sock.close()
                 self._log(INFO, "ControlPath connection failed: %r", e)
                 raise SSHException(
                     "Unable to connect to ControlPath '{}' - {}".format(
